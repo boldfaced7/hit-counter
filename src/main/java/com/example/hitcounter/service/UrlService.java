@@ -5,7 +5,9 @@ import com.example.hitcounter.domain.Url;
 import com.example.hitcounter.domain.Visit;
 import com.example.hitcounter.repository.DailyCountRepository;
 import com.example.hitcounter.repository.UrlRepository;
+import com.example.hitcounter.repository.VisitRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,8 +23,11 @@ import java.util.stream.IntStream;
 public class UrlService {
     private final UrlRepository urlRepository;
     private final DailyCountRepository dailyCountRepository;
+    private final VisitRepository visitRepository;
 
+    @Async
     public Url saveUrl(String url) {
+        System.out.println(Thread.currentThread().getName());
         return urlRepository.save(Url.createUrl(url));
     }
 
@@ -58,16 +63,17 @@ public class UrlService {
         return countMap;
     }
 
-    private DailyCount addDailyCountAndVisit(Url url) {
+    @Async
+    public DailyCount addDailyCountAndVisit(Url url) {
         DailyCount dailyCount = dailyCountRepository
                 .findByUrlAndDate(url, LocalDate.now())
                 .orElseGet(() ->
                     DailyCount.createDailyCount(url, LocalDate.now())
                 );
-        dailyCount.addUrl(url);
+        dailyCountRepository.save(dailyCount);
 
         Visit visit = Visit.createVisit(url);
-        visit.addUrl(url);
+        visitRepository.save(visit);
 
         return dailyCount;
     }
