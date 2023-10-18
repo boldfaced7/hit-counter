@@ -14,5 +14,22 @@ public class Visit extends BaseTimeEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "url_id")
     private Url url;
+
+    private Visit(Url url) {
+        this.url = url;
+    }
+
+    public static Visit createVisit(Url url) {
+        Visit visit = new Visit();
+        visit.addUrl(url);
+        return visit;
+    }
+
+    public void addUrl(Url url) {
+        this.url = url;
+        url.getVisits().add(this);
+    }
+
 }
